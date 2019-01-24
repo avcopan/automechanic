@@ -6,4 +6,5 @@ disable=
     too-many-locals,
     too-many-arguments,
     too-few-public-methods,
-    redefined-builtin
+    redefined-builtin,
+    assignment-from-no-return

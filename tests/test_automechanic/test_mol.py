@@ -1,6 +1,14 @@
 """ test the automechanic.mol module
 """
+import os
+import numpy
 from automechanic import mol
+
+PATH = os.path.dirname(os.path.realpath(__file__))
+DATA_PATH = os.path.join(PATH, 'data')
+
+HEPTANE_ICHS = numpy.loadtxt(os.path.join(DATA_PATH, 'heptane_inchis.txt'),
+                             dtype=str)
 
 AR_ICH = 'InChI=1S/Ar'
 
@@ -15,7 +23,6 @@ C2H2F2_GEO = (('F', (1.584822920001, -0.748486564300, -0.4271224303432)),
               ('F', (-1.602333181611, 0.736677675476, -0.02605091648865)),
               ('H', (0.916321356258, 1.229945559249, -0.2271265738271)),
               ('H', (-0.882300328471, -1.224388297273, -0.229635969682)))
-C2H2F2_ICH_ORDER = (1, 2, 0, 3)
 
 C8H13O_ICH = (
     'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3/'
@@ -276,13 +283,6 @@ PYBEL_FAIL_ICHS = (
     'InChI=1S/C7H15O4/c1-2-4-7(11-9)5-3-6-10-8/h7-8H,2-6H2,1H3')
 
 
-def test__geom__inchi_with_order():
-    """ test mol.geom.inchi_with_order
-    """
-    assert (mol.geom.inchi_with_order(C2H2F2_GEO)
-            == (C2H2F2_ICH, C2H2F2_ICH_ORDER))
-
-
 def test__geom__inchi():
     """ test mol.geom.inchi
     """
@@ -293,14 +293,6 @@ def test__smiles__inchi():
     """ test mol.smiles.inchi
     """
     assert mol.smiles.inchi(C2H2F2_SMI) == C2H2F2_ICH
-    assert mol.smiles.inchi(C2H2F2_SMI_NO_STEREO) == C2H2F2_ICH_NO_STEREO
-    assert (mol.smiles.inchi(C2H2F2_SMI_NO_STEREO, force_stereo=True)
-            == C2H2F2_ICH_STEREO_UNKNOWN)
-
-    assert (mol.smiles.inchi(C2H4CLF_SMI_NO_STEREO)
-            == 'InChI=1S/C2H4ClF/c1-2(3)4/h2H,1H3')
-    assert (mol.smiles.inchi(C2H4CLF_SMI_NO_STEREO, force_stereo=True)
-            == 'InChI=1/C2H4ClF/c1-2(3)4/h2H,1H3/t2?')
 
 
 def test__inchi__smiles():
@@ -338,6 +330,14 @@ def test__inchi__prefix():
     assert mol.inchi.prefix(C2H2F2_ICH_STEREO_UNKNOWN) == 'InChI=1'
 
 
+def test__inchi__version():
+    """ test mol.inchi.version
+    """
+    assert mol.inchi.version(C2H2F2_ICH) == '1S'
+    assert mol.inchi.version(C2H2F2_ICH_NO_STEREO) == '1S'
+    assert mol.inchi.version(C2H2F2_ICH_STEREO_UNKNOWN) == '1'
+
+
 def test__inchi__formula_layer():
     """ test mol.inchi.formula_layer
     """
@@ -346,34 +346,79 @@ def test__inchi__formula_layer():
             == '2C2H5.Zn')
 
 
-def test__inchi__sublayer():
-    """ test mol.inchi.sublayer
+def test__inchi__key_layer():
+    """ test mol.inchi.key_layer
     """
-    assert mol.inchi.sublayer(C2H2F2_ICH, 'c') == '3-1-2-4'
-    assert mol.inchi.sublayer(C2H2F2_ICH, 'h') == '1-2H'
-    assert mol.inchi.sublayer(C2H2F2_ICH, 'b') == '2-1+'
-    assert mol.inchi.sublayer(C2H2F2_ICH_STEREO_UNKNOWN, 'c') == '3-1-2-4'
-    assert mol.inchi.sublayer(C2H2F2_ICH_STEREO_UNKNOWN, 'h') == '1-2H'
-    assert mol.inchi.sublayer(C2H2F2_ICH_STEREO_UNKNOWN, 'b') == '2-1?'
-    assert mol.inchi.sublayer(C2H2F2_ICH_NO_STEREO, 'c') == '3-1-2-4'
-    assert mol.inchi.sublayer(C2H2F2_ICH_NO_STEREO, 'h') == '1-2H'
-    assert mol.inchi.sublayer(C2H2F2_ICH_NO_STEREO, 'b') is None
+    assert mol.inchi.key_layer(C2H2F2_ICH, 'c') == 'c3-1-2-4'
+    assert mol.inchi.key_layer(C2H2F2_ICH, 'h') == 'h1-2H'
+    assert mol.inchi.key_layer(C2H2F2_ICH, 'b') == 'b2-1+'
+    assert mol.inchi.key_layer(C2H2F2_ICH_STEREO_UNKNOWN, 'c') == 'c3-1-2-4'
+    assert mol.inchi.key_layer(C2H2F2_ICH_STEREO_UNKNOWN, 'h') == 'h1-2H'
+    assert mol.inchi.key_layer(C2H2F2_ICH_STEREO_UNKNOWN, 'b') == 'b2-1?'
+    assert mol.inchi.key_layer(C2H2F2_ICH_NO_STEREO, 'c') == 'c3-1-2-4'
+    assert mol.inchi.key_layer(C2H2F2_ICH_NO_STEREO, 'h') == 'h1-2H'
+    assert mol.inchi.key_layer(C2H2F2_ICH_NO_STEREO, 'b') is None
 
 
-def test__inchi__with_sublayers():
-    """ test mol.inchi.with_sublayers
+def test__inchi__key_layer_content():
+    """ test mol.inchi.key_layer_content
     """
-    assert mol.inchi.with_sublayers(AR_ICH, ('c', 'h')) == AR_ICH
-    assert (mol.inchi.with_sublayers(C2H2F2_ICH, ('c', 'h'))
+    assert mol.inchi.key_layer_content(C2H2F2_ICH, 'c') == '3-1-2-4'
+    assert mol.inchi.key_layer_content(C2H2F2_ICH, 'h') == '1-2H'
+    assert mol.inchi.key_layer_content(C2H2F2_ICH, 'b') == '2-1+'
+    assert (mol.inchi.key_layer_content(C2H2F2_ICH_STEREO_UNKNOWN, 'c')
+            == '3-1-2-4')
+    assert (mol.inchi.key_layer_content(C2H2F2_ICH_STEREO_UNKNOWN, 'h')
+            == '1-2H')
+    assert (mol.inchi.key_layer_content(C2H2F2_ICH_STEREO_UNKNOWN, 'b')
+            == '2-1?')
+    assert mol.inchi.key_layer_content(C2H2F2_ICH_NO_STEREO, 'c') == '3-1-2-4'
+    assert mol.inchi.key_layer_content(C2H2F2_ICH_NO_STEREO, 'h') == '1-2H'
+    assert mol.inchi.key_layer_content(C2H2F2_ICH_NO_STEREO, 'b') is None
+
+
+def test__inchi__core_parent():
+    """ test mol.inchi.core_parent
+    """
+    assert mol.inchi.core_parent(AR_ICH) == AR_ICH
+    assert (mol.inchi.core_parent(C2H2F2_ICH)
             == 'InChI=1S/C2H2F2/c3-1-2-4/h1-2H')
-    assert (mol.inchi.with_sublayers(C2H2F2_ICH_NO_STEREO, ('c', 'h'))
+    assert (mol.inchi.core_parent(C2H2F2_ICH_NO_STEREO)
             == 'InChI=1S/C2H2F2/c3-1-2-4/h1-2H')
-    assert (mol.inchi.with_sublayers(C2H2F2_ICH_STEREO_UNKNOWN, ('c', 'h'))
+    assert (mol.inchi.core_parent(C2H2F2_ICH_STEREO_UNKNOWN)
             == 'InChI=1/C2H2F2/c3-1-2-4/h1-2H')
-    assert (mol.inchi.with_sublayers(C8H13O_ICH_NO_STEREO, ('c', 'h'))
+    assert (mol.inchi.core_parent(C8H13O_ICH_NO_STEREO)
             == 'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3')
-    assert (mol.inchi.with_sublayers(C8H13O_ICH, ('c', 'h'))
+    assert (mol.inchi.core_parent(C8H13O_ICH)
             == 'InChI=1S/C8H13O/c1-3-5-7-8(9)6-4-2/h3-6,8H,7H2,1-2H3')
+
+
+def test__inchi__atom_stereo_elements():
+    """ test mol.inchi.atom_stereo_elements
+    """
+    assert mol.inchi.atom_stereo_elements(C8H13O_ICH_NO_STEREO) == ()
+    assert mol.inchi.atom_stereo_elements(C8H13O_ICH) == (('8', '-'),)
+
+
+def test__inchi__bond_stereo_elements():
+    """ test mol.inchi.bond_stereo_elements
+    """
+    assert mol.inchi.bond_stereo_elements(C8H13O_ICH_NO_STEREO) == ()
+    assert (mol.inchi.bond_stereo_elements(C8H13O_ICH)
+            == (('5-3', '-'), ('6-4', '-')))
+
+
+def test__inchi__has_unknown_stereo_elements():
+    """ test mol.inchi.has_unknown_stereo_elements
+    """
+    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH)
+            is False)
+    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH_PARTIAL_STEREO)
+            is True)
+    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH_NO_STEREO)
+            is True)
+    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH_NO_ENANTIOMER)
+            is False)
 
 
 def test__inchi__compatible_stereoisomers():
@@ -390,6 +435,39 @@ def test__inchi__inchi_key():
     assert mol.inchi.inchi_key(C2H2F2_ICH) == 'WFLOTYSKFUPZQB-OWOJBTEDSA-N'
     assert (mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)
             == 'WFLOTYSKFUPZQB-UHFFFAOYSA-N')
+
+
+def test__inchi__key__first_hash():
+    """ test mol.inchi.key.first_hash()
+    """
+    assert (mol.inchi.key.first_hash(
+        mol.inchi.inchi_key(C2H2F2_ICH)) == 'WFLOTYSKFUPZQB')
+    assert (mol.inchi.key.first_hash(
+        mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) == 'WFLOTYSKFUPZQB')
+    assert (mol.inchi.key.first_hash(
+        mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) == 'WFLOTYSKFUPZQB')
+
+
+def test__inchi__key__second_hash():
+    """ test mol.inchi.key.second_hash()
+    """
+    assert (mol.inchi.key.second_hash(
+        mol.inchi.inchi_key(C2H2F2_ICH)) == 'OWOJBTED')
+    assert (mol.inchi.key.second_hash(
+        mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) == 'UHFFFAOY')
+    assert (mol.inchi.key.second_hash(
+        mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) == 'HXYFBOIP')
+
+
+def test__inchi__key__is_standard_neutral():
+    """ test mol.inchi.key.is_standard_neutral()
+    """
+    assert (mol.inchi.key.is_standard_neutral(
+        mol.inchi.inchi_key(C2H2F2_ICH)) is True)
+    assert (mol.inchi.key.is_standard_neutral(
+        mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) is True)
+    assert (mol.inchi.key.is_standard_neutral(
+        mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) is False)
 
 
 def test__inchi__geometry():
@@ -409,87 +487,81 @@ def test__inchi__connectivity_graph():
     """ test mol.inchi.connectivity_graph
     """
     assert (mol.inchi.connectivity_graph(C2H2F2_ICH)
-            == (('C', 'C', 'F', 'F', 'H', 'H'),
-                {frozenset({0, 1}): None, frozenset({0, 2}): None,
-                 frozenset({1, 3}): None, frozenset({0, 4}): None,
-                 frozenset({1, 5}): None}))
+            == ({0: ('C', 0, None), 1: ('C', 0, None), 2: ('F', 0, None),
+                 3: ('F', 0, None), 4: ('H', 0, None), 5: ('H', 0, None)},
+                {frozenset({0, 1}): (1, None), frozenset({0, 2}): (1, None),
+                 frozenset({1, 3}): (1, None), frozenset({0, 4}): (1, None),
+                 frozenset({1, 5}): (1, None)}))
+
+    # make sure this runs -- the function is self-testing
+    for ich in HEPTANE_ICHS:
+        mol.inchi.connectivity_graph(ich)
 
 
-def test__inchi__has_unknown_stereo_elements():
-    """ test mol.inchi.has_unknown_stereo_elements
+def test__inchi__stereo_graph():
+    """ test mol.inchi.stereo_graph
     """
-    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH)
-            is False)
-    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH_PARTIAL_STEREO)
-            is True)
-    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH_NO_STEREO)
-            is True)
-    assert (mol.inchi.has_unknown_stereo_elements(C8H13O_ICH_NO_ENANTIOMER)
-            is False)
+    assert (mol.inchi.stereo_graph(C8H13O_ICH)
+            == ({0: ('C', 0, None), 1: ('C', 0, None), 2: ('C', 0, None),
+                 3: ('C', 0, None), 4: ('C', 0, None), 5: ('C', 0, None),
+                 6: ('C', 0, None), 7: ('C', 0, False), 8: ('O', 0, None),
+                 9: ('H', 0, None), 10: ('H', 0, None), 11: ('H', 0, None),
+                 12: ('H', 0, None), 13: ('H', 0, None), 14: ('H', 0, None),
+                 15: ('H', 0, None), 16: ('H', 0, None), 17: ('H', 0, None),
+                 18: ('H', 0, None), 19: ('H', 0, None), 20: ('H', 0, None),
+                 21: ('H', 0, None)},
+                {frozenset({0, 2}): (1, None), frozenset({1, 3}): (1, None),
+                 frozenset({2, 4}): (1, False), frozenset({3, 5}): (1, False),
+                 frozenset({4, 6}): (1, None), frozenset({5, 7}): (1, None),
+                 frozenset({6, 7}): (1, None), frozenset({8, 7}): (1, None),
+                 frozenset({0, 9}): (1, None), frozenset({0, 10}): (1, None),
+                 frozenset({0, 11}): (1, None), frozenset({1, 12}): (1, None),
+                 frozenset({1, 13}): (1, None), frozenset({1, 14}): (1, None),
+                 frozenset({2, 15}): (1, None), frozenset({16, 3}): (1, None),
+                 frozenset({17, 4}): (1, None), frozenset({18, 5}): (1, None),
+                 frozenset({19, 6}): (1, None), frozenset({20, 6}): (1, None),
+                 frozenset({21, 7}): (1, None)}))
+
+    # make sure this runs -- the function is self-testing
+    ichs = numpy.random.choice(HEPTANE_ICHS, 10)
+    for ich in ichs:
+        try:
+            mol.inchi.stereo_graph(ich)
+        except NotImplementedError:
+            pass
 
 
-def test__inchi_key__is_standard_neutral():
-    """ test mol.inchi_key.is_standard_neutral()
+def test__geom__connectivity_graph():
+    """ test mol.geom.connectivity_graph()
     """
-    assert (mol.inchi_key.is_standard_neutral(
-        mol.inchi.inchi_key(C2H2F2_ICH)) is True)
-    assert (mol.inchi_key.is_standard_neutral(
-        mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) is True)
-    assert (mol.inchi_key.is_standard_neutral(
-        mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) is False)
-
-
-def test__inchi_key__first_hash():
-    """ test mol.inchi_key.first_hash()
-    """
-    assert (mol.inchi_key.first_hash(
-        mol.inchi.inchi_key(C2H2F2_ICH)) == 'WFLOTYSKFUPZQB')
-    assert (mol.inchi_key.first_hash(
-        mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) == 'WFLOTYSKFUPZQB')
-    assert (mol.inchi_key.first_hash(
-        mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) == 'WFLOTYSKFUPZQB')
-
-
-def test__inchi_key__second_hash():
-    """ test mol.inchi_key.second_hash()
-    """
-    assert (mol.inchi_key.second_hash(
-        mol.inchi.inchi_key(C2H2F2_ICH)) == 'OWOJBTED')
-    assert (mol.inchi_key.second_hash(
-        mol.inchi.inchi_key(C2H2F2_ICH_NO_STEREO)) == 'UHFFFAOY')
-    assert (mol.inchi_key.second_hash(
-        mol.inchi.inchi_key(C2H2F2_ICH_STEREO_UNKNOWN)) == 'HXYFBOIP')
-
-
-def test__geom__resonance_graph():
-    """ test mol.geom.resonance_graph()
-    """
-    assert (mol.geom.resonance_graph(C2H2F2_GEO)
-            == (('F', 'C', 'C', 'F', 'H', 'H'),
-                {frozenset({0, 1}): 1, frozenset({1, 2}): 2,
-                 frozenset({1, 4}): 1, frozenset({2, 3}): 1,
-                 frozenset({2, 5}): 1}))
+    assert (mol.geom.connectivity_graph(C2H2F2_GEO)
+            == ({0: ('F', 0, None), 1: ('C', 0, None), 2: ('C', 0, None),
+                 3: ('F', 0, None), 4: ('H', 0, None), 5: ('H', 0, None)},
+                {frozenset({0, 1}): (1, None), frozenset({1, 2}): (1, None),
+                 frozenset({1, 4}): (1, None), frozenset({2, 3}): (1, None),
+                 frozenset({2, 5}): (1, None)}))
 
 
 if __name__ == '__main__':
-    test__smiles__inchi()
-    test__inchi__smiles()
+    # test__smiles__inchi()
+    # test__inchi__smiles()
     # test__inchi__recalculate()
-    test__inchi__is_closed()
+    # test__inchi__is_closed()
     # test__inchi__prefix()
+    # test__inchi__version()
     # test__inchi__formula_layer()
-    # test__inchi__sublayer()
-    test__inchi__with_sublayers()
-    # test__inchi__inchi_key()
+    # test__inchi__key_layer()
+    # test__inchi__key_layer_content()
+    # test__inchi__core_parent()
+    # test__inchi__atom_stereo_elements()
+    # test__inchi__bond_stereo_elements()
+    # test__inchi__has_unknown_stereo_elements()
+    # test__inchi__compatible_stereoisomers()
+    # test__inchi__key__first_hash()
+    # test__inchi__key__second_hash()
+    # test__inchi__key__is_standard_neutral()
+    # test__geom__connectivity_graph()
+    # test__geom__inchi()
     # test__inchi__geometry()
     # test__inchi__connectivity_graph()
-    test__inchi__has_unknown_stereo_elements()
-    test__inchi_key__is_standard_neutral()
-    test__inchi_key__first_hash()
-    test__inchi_key__second_hash()
-    # test__inchi__compatible_stereoisomers()
-    # test__geom__inchi_with_order()
-    # test__geom__atoms()
-    # test__geom__bonds()
-    # test__geom__graph()
-    test__inchi__connectivity_graph()
+    test__inchi__stereo_graph()

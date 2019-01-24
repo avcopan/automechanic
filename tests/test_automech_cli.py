@@ -81,5 +81,5 @@ if __name__ == '__main__':
     # test__chemkin__help()
     # test__chemkin__to_csv()
     # test__species__help()
-    test__species__to_inchi()
-    # test__species__filesystem()
+    # test__species__to_inchi()
+    test__species__filesystem()
