@@ -33,37 +33,38 @@ def matcher(pattern):
     return partial(has_match, pattern)
 
 
-def single_capture(pattern, string):
-    """ capture from first match for a single-capture pattern
+def all_captures(pattern, string):
+    """ capture(s) for all matches of a capturing pattern
+    """
+    return tuple(re.findall(pattern, string, flags=re.MULTILINE))
+
+
+def first_capture(pattern, string):
+    """ capture(s) from first match for a capturing pattern
     """
     match = re.search(pattern, string, flags=re.MULTILINE)
-    return match.group(1) if match else None
+    return (match.group(1) if match and len(match.groups()) == 1 else
+            match.groups() if match else None)
 
 
-def multiple_capture(pattern, string):
-    """ capture from first match for a multi-capture pattern
+def last_capture(pattern, string):
+    """ capture(s) from first match for a capturing pattern
     """
-    match = re.search(pattern, string, flags=re.MULTILINE)
-    return match.groups() if match else None
+    caps_lst = all_captures(pattern, string)
+    return caps_lst[-1] if caps_lst else None
 
 
-def multiple_named_capture(pattern, string):
+def first_named_capture(pattern, string):
     """ capture dictionary from first match for a pattern with named captures
     """
     match = re.search(pattern, string, flags=re.MULTILINE)
     return match.groupdict() if match and match.groupdict() else None
 
 
-def captures(pattern, string):
-    """ captures for all matches of a capturing pattern
-    """
-    return re.findall(pattern, string, flags=re.MULTILINE)
-
-
 def split(pattern, string):
     """ split string at matches
     """
-    return re.split(pattern, string, maxsplit=0, flags=re.MULTILINE)
+    return tuple(re.split(pattern, string, maxsplit=0, flags=re.MULTILINE))
 
 
 def split_words(string):
@@ -107,9 +108,3 @@ def headlined_sections(pattern, string):
     lines = lstrip(lines, pred=lambda line: not pattern_matcher(line))
     sections = list(map(join_lines, split_before(lines, pattern_matcher)))
     return sections
-
-
-# def replace_first
-# def first_named
-# def every
-# def every_named

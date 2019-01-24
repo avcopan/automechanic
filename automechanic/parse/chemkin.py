@@ -27,12 +27,11 @@ from ..rere.pattern_lib import EXPONENTIAL_FLOAT
 from ..rere.find import has_match as find_if_has_match
 from ..rere.find import split as find_split
 from ..rere.find import remove as find_remove
-from ..rere.find import captures as find_captures
+from ..rere.find import all_captures as find_captures
 from ..rere.find import split_words as find_split_words
 from ..rere.find import split_lines as find_split_lines
 from ..rere.find import strip_spaces as find_strip_spaces
-from ..rere.find import single_capture as find_single_capture
-from ..rere.find import multiple_capture as find_multiple_capture
+from ..rere.find import first_capture as find_first_capture
 from ..rere.find import headlined_sections as find_headlined_sections
 
 SPACES = one_or_more(NONNEWLINE_WHITESPACE)
@@ -120,7 +119,7 @@ def _split_reagent_string(rgt_str):
     def _interpret_reagent_count(rgt_cnt_str):
         _pattern = (STRING_START + capturing(maybe(DIGIT)) +
                     capturing(one_or_more(ANY_CHAR)))
-        cnt, rgt = find_multiple_capture(_pattern, rgt_cnt_str)
+        cnt, rgt = find_first_capture(_pattern, rgt_cnt_str)
         cnt = int(cnt) if cnt else 1
         rgts = (rgt,) * cnt
         return rgts
@@ -142,7 +141,7 @@ def reaction_data_high_p_coeffs(rxn_dstr):
         [EXPONENTIAL_FLOAT, EXPONENTIAL_INTEGER, FLOAT, INTEGER])
     pattern = (SPACES + capturing(number) + SPACES + capturing(number) +
                SPACES + capturing(number))
-    captures = find_multiple_capture(pattern, headline)
+    captures = find_first_capture(pattern, headline)
     assert captures
     cfts = tuple(map(float, captures))
     return cfts
@@ -185,7 +184,7 @@ def thermo_data_species_name(thm_dstr):
     """ get the species name from a thermo data string
     """
     pattern = STRING_START + capturing(one_or_more(NONWHITESPACE))
-    spc = find_single_capture(pattern, thm_dstr)
+    spc = find_first_capture(pattern, thm_dstr)
     return spc
 
 
@@ -196,7 +195,7 @@ def thermo_data_temperatures(thm_dstr):
     pattern = (SPACES + capturing(UNSIGNED_FLOAT) +
                SPACES + capturing(UNSIGNED_FLOAT) +
                SPACES + capturing(UNSIGNED_FLOAT))
-    captures = find_multiple_capture(pattern, headline)
+    captures = find_first_capture(pattern, headline)
     assert captures
     tmps = tuple(map(float, captures))
     return tmps
@@ -232,8 +231,8 @@ def reaction_unit_names(mech_str):
     e_pattern = (STRING_START +
                  maybe(one_of_these(a_unit_names) + SPACES) +
                  capturing(one_of_these(e_unit_names)))
-    a_unit_name = find_single_capture(a_pattern, block_str)
-    e_unit_name = find_single_capture(e_pattern, block_str)
+    a_unit_name = find_first_capture(a_pattern, block_str)
+    e_unit_name = find_first_capture(e_pattern, block_str)
     return a_unit_name, e_unit_name
 
 
@@ -245,7 +244,7 @@ def thermo_t_common_default(mech_str):
                UNSIGNED_FLOAT + SPACES +
                capturing(UNSIGNED_FLOAT) + SPACES +
                UNSIGNED_FLOAT)
-    capture = find_single_capture(pattern, block_str)
+    capture = find_first_capture(pattern, block_str)
     assert capture
     tmp_com_def = float(capture)
     return tmp_com_def
@@ -292,5 +291,5 @@ def _block(mech_str, block_keys):
     contents = capturing(one_or_more(ANY_CHAR, greedy=False))
     pattern = start_key + contents + 'END'
     mech_str = remove_comments(mech_str)
-    block = find_single_capture(pattern, mech_str)
+    block = find_first_capture(pattern, mech_str)
     return find_strip_spaces(block) if block else None

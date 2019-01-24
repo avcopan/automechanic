@@ -7,8 +7,6 @@ import rdkit.Chem.AllChem as _rd_all_chem
 _LOGGER = RDLogger.logger()
 _LOGGER.setLevel(RDLogger.ERROR)
 
-InChIError = _rd_chem.inchi.InchiReadWriteError
-
 
 def inchi_to_inchi_key(ich):
     """ InChI-Key from an InChI string
@@ -17,17 +15,11 @@ def inchi_to_inchi_key(ich):
     return ick
 
 
-def from_mol_block(mbl):
-    """ rdkit molecule object from a mol block string
-    """
-    rdm = _rd_chem.rdmolfiles.MolFromMolBlock(mbl, removeHs=False)
-    return rdm
-
-
 def from_smiles(smi):
     """ rdkit molecule object from a SMILES string
     """
     rdm = _rd_chem.MolFromSmiles(smi)
+    assert rdm is not None
     return rdm
 
 
@@ -35,6 +27,7 @@ def from_inchi(ich):
     """ rdkit molecule object from an InChI string
     """
     rdm = _rd_chem.inchi.MolFromInchi(ich, treatWarningAsError=False)
+    assert rdm is not None
     return rdm
 
 
@@ -53,13 +46,6 @@ def to_inchi(rdm, options='', with_aux_info=False):
     else:
         ret = _rd_chem.inchi.MolToInchi(rdm, options=options)
     return ret
-
-
-def formula(rdm):
-    """ molecular formula from an rdkit molecule object
-    """
-    frm = _rd_chem.rdMolDescriptors.CalcMolFormula(rdm)
-    return frm
 
 
 def geometry(rdm):
@@ -87,7 +73,7 @@ def connectivity_graph(rdm):
     rdm = _rd_chem.AddHs(rdm)
     atms = rdm.GetAtoms()
     bnds = rdm.GetBonds()
-    asbs = tuple(rda.GetSymbol() for rda in atms)
-    cnns = {frozenset([rdb.GetBeginAtomIdx(), rdb.GetEndAtomIdx()]): None
+    asbs = dict(enumerate((rda.GetSymbol(), 0, None) for rda in atms))
+    cnns = {frozenset([rdb.GetBeginAtomIdx(), rdb.GetEndAtomIdx()]): (1, None)
             for rdb in bnds}
     return (asbs, cnns)

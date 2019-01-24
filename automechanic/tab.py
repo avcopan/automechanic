@@ -11,7 +11,7 @@ from pandas import read_csv as _read_csv
 from pandas import DataFrame as _DataFrame
 from pandas import Int64Index as _Int64Index
 from pandas import RangeIndex as _RangeIndex
-from .rere.find import single_capture as _single_capture
+from .rere.find import first_capture as _first_capture
 from .rere.pattern import escape as _escape
 from .rere.pattern import capturing as _capturing
 from .rere.pattern_lib import STRING_START as _STRING_START
@@ -220,7 +220,7 @@ def _index_save_ids(tbl):
     _pattern = (_STRING_START + 'i' + _capturing(_UNSIGNED_INTEGER) +
                 _escape('_') + _STRING_END)
     keys = keys_(tbl)
-    caps = tuple(_single_capture(_pattern, key) for key in keys)
+    caps = tuple(_first_capture(_pattern, key) for key in keys)
     sids = tuple(int(cap) for cap in caps if cap is not None)
     return sids
 

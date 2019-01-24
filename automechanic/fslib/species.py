@@ -9,10 +9,10 @@ def assert_complete_species_id(ich, mult):
     """
     ick = mol.inchi.inchi_key(ich)
     cgr = mol.inchi.connectivity_graph(ich)
-    assert mol.inchi_key.is_standard_neutral(ick)
+    assert mol.inchi.key.is_standard_neutral(ick)
     assert mol.inchi.has_unknown_stereo_elements(ich) is False
     assert mol.inchi.is_closed(ich)
-    assert mult in mol.graph.conn.possible_spin_multiplicities(cgr)
+    assert mult in mol.graph.possible_spin_multiplicities(cgr)
 
 
 def branch_segments(ich, mult):
@@ -41,7 +41,7 @@ def _formula_segment(ich):
 
 def _connectivity_segment(ich):
     ick = mol.inchi.inchi_key(ich)
-    dir_name = mol.inchi_key.first_hash(ick)
+    dir_name = mol.inchi.key.first_hash(ick)
     inf_dct = _inchi_hash_information(mol.inchi.core_parent(ich))
     return (dir_name, inf_dct)
 
@@ -54,7 +54,7 @@ def _multiplicity_segment(mult):
 
 def _stereochemistry_segment(ich):
     ick = mol.inchi.inchi_key(ich)
-    dir_name = mol.inchi_key.second_hash(ick)
+    dir_name = mol.inchi.key.second_hash(ick)
     inf_dct = _inchi_hash_information(ich)
     return (dir_name, inf_dct)
 
