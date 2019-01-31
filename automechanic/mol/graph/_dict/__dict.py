@@ -1,5 +1,15 @@
 """ dictionary helpers
 """
+from itertools import starmap as _starmap
+
+
+def right_update(dct1, dct2):
+    """ return the update of `dct1` by `dct2`
+    """
+    dct = {}
+    dct.update(dct1)
+    dct.update(dct2)
+    return dct
 
 
 def by_key(dct, keys, fill_val=None):
@@ -14,10 +24,10 @@ def values_by_key(dct, keys, fill_val=None):
     return tuple(dct[key] if key in dct else fill_val for key in keys)
 
 
-def keys_by_value(dct, vals):
+def keys_by_value(dct, func):
     """ return dictionary keys for specific values
     """
-    return tuple(key for key, val in dct.items() if val in vals)
+    return frozenset(key for key, val in dct.items() if func(val))
 
 
 def transform_keys(dct, func):
@@ -30,6 +40,12 @@ def transform_values(dct, func):
     """ apply a function to each value
     """
     return dict(zip(dct.keys(), map(func, dct.values())))
+
+
+def transform_items_to_values(dct, func):
+    """ apply a function to each value
+    """
+    return dict(zip(dct.keys(), _starmap(func, dct.items())))
 
 
 def keys_sorted_by_value(dct):

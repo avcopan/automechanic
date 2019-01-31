@@ -5,91 +5,202 @@ atm_dct: {atm_key: (atm_val1, atm_val2, ...), ...}
 bnd_dct: {bnd_key: (bnd_val1, bnd_val2, ...), ...}
 bnd_key := frozenset({atm1_key, atm2_key})
 """
-# constructors
-from ._base import empty_graph
-from ._base import from_data
-from ._base import add_atoms
-from ._base import add_bonds
-# value getters
-from ._base import atoms
-from ._base import bonds
-from ._base import atom_keys
-from ._base import bond_keys
-from ._base import atom_symbols
-from ._base import atom_implicit_hydrogen_valences
-from ._base import atom_stereo_keys
-from ._base import atom_stereo_parities
-from ._base import bond_orders
-from ._base import bond_stereo_keys
-from ._base import bond_stereo_parities
-# value setters
-from ._base import set_atom_implicit_hydrogen_valences
-from ._base import set_atom_stereo_parities
-from ._base import set_bond_orders
-from ._base import set_bond_stereo_parities
-from ._res import increment_bond_orders
-# derived values
-from ._base import is_chiral
-from ._res import maximum_spin_multiplicity
-from ._res import possible_spin_multiplicities
-from ._base import ring_keys_list
-from ._base import backbone_keys
-from ._base import explicit_hydrogen_keys
-from ._base import atom_nuclear_charges
-from ._base import atom_total_valences
+
+# core library
+# # constructors
+from ._core import from_atoms_and_bonds
+from ._core import from_data
+from ._core import add_atoms
+from ._core import add_bonds
+from ._core import empty_graph
+# # value getters
+from ._core import atoms
+from ._core import bonds
+from ._core import atom_keys
+from ._core import bond_keys
+from ._core import atom_symbols
+from ._core import atom_implicit_hydrogen_valences
+from ._core import atom_stereo_parities
+from ._core import bond_orders
+from ._core import bond_stereo_parities
+# # value setters
+from ._core import set_atom_implicit_hydrogen_valences
+from ._core import set_atom_stereo_parities
+from ._core import set_bond_orders
+from ._core import set_bond_stereo_parities
+# # transformations
+from ._core import without_bond_orders
+from ._core import without_stereo_parities
+
+# graph theory library
+# # atom properties
+from ._graph import atom_neighbor_keys
+from ._graph import atom_bond_keys
+from ._graph import atom_neighborhoods
+# # bond properties
+from ._graph import bond_neighbor_keys
+from ._graph import bond_neighborhoods
+# # other properties
+from ._graph import branch
+from ._graph import branch_bond_keys
+from ._graph import rings
+from ._graph import rings_bond_keys
+from ._graph import subgraph
+from ._graph import bond_induced_subgraph
+# # transformations
+from ._graph import relabel
+from ._graph import delete_atoms
+
+# connectivity graph library
+# # atom properties
+from ._expl import atom_explicit_hydrogen_valences
+from ._expl import atom_explicit_hydrogen_keys
+# # other properties
+from ._expl import backbone_keys
+from ._expl import explicit_hydrogen_keys
+# # transformations
+from ._expl import add_explicit_hydrogens
+from ._expl import implicit
+from ._expl import explicit
+# # comparisons
+from ._expl import backbone_isomorphic
+from ._expl import backbone_isomorphism
+from ._expl import backbone_unique
+
+# inchi conversion library
+from ._inchi import atom_inchi_numbers
+from ._inchi import inchi
+from ._inchi import stereo_inchi_from_coordinates
+
+# resonance library
+# # atom properties
 from ._res import atom_bond_valences
 from ._res import atom_radical_valences
-from ._base import atom_neighbor_keys
-from ._base import atom_explicit_hydrogen_keys
-from ._base import atom_bond_keys
-from ._base import atom_neighborhoods
-from ._conn import atom_inchi_numbers
-from ._conn import inchi
-from ._stereo import inchi as stereo_inchi
-from ._stereo import atom_stereo_coordinates
-# transformations
-from ._base import implicit
-from ._base import explicit
-from ._base import explicit_stereo_sites
-from ._base import delete_atoms
-from ._base import add_explicit_hydrogens
-from ._base import subgraph
-from ._base import subgraph_by_bonds
-from ._base import relabel
-from ._base import reflection
+# # bond properties
+from ._res import resonance_dominant_bond_orders
+# # other properties
+from ._res import maximum_spin_multiplicity
+from ._res import possible_spin_multiplicities
+# # transformations
+from ._res import resonances
 from ._res import subresonances
-from ._res import lowspin_resonance
-# comparisons
-from ._base import backbone_isomorphic
-from ._base import backbone_isomorphism
+from ._res import dominant_resonances
+from ._res import dominant_resonance
+
+# stereo library
+# # properties
+from ._stereo import stereo_inchi
+from ._stereo import is_chiral
+from ._stereo import atom_stereo_keys
+from ._stereo import bond_stereo_keys
+from ._stereo import stereogenic_atom_keys
+from ._stereo import stereogenic_bond_keys
+# # transformations
+from ._stereo import reflection
+from ._stereo import stereomers
+from ._stereo import substereomers
+from ._stereo import enantiomerically_unique
+
 # submodules
-from . import to_inchi
+from . import _dict as dict
 
 
 __all__ = [
-    # constructors
-    'empty_graph', 'from_data', 'add_atoms', 'add_bonds',
-    # value getters
-    'atoms', 'bonds', 'atom_keys', 'bond_keys', 'atom_symbols',
-    'atom_implicit_hydrogen_valences', 'atom_stereo_keys',
-    'atom_stereo_parities', 'bond_orders', 'bond_stereo_keys',
+    # core library
+    # # constructors
+    'from_atoms_and_bonds',
+    'from_data',
+    'add_atoms',
+    'add_bonds',
+    'empty_graph',
+    # # value getters
+    'atoms',
+    'bonds',
+    'atom_keys',
+    'bond_keys',
+    'atom_symbols',
+    'atom_implicit_hydrogen_valences',
+    'atom_stereo_parities',
+    'bond_orders',
     'bond_stereo_parities',
-    # value setters
-    'set_atom_implicit_hydrogen_valences', 'set_atom_stereo_parities',
-    'set_bond_orders', 'set_bond_stereo_parities', 'increment_bond_orders',
-    # derived values
-    'is_chiral', 'maximum_spin_multiplicity', 'possible_spin_multiplicities',
-    'ring_keys_list', 'backbone_keys', 'explicit_hydrogen_keys',
-    'atom_nuclear_charges', 'atom_total_valences', 'atom_bond_valences',
-    'atom_radical_valences', 'atom_neighbor_keys',
-    'atom_explicit_hydrogen_keys', 'atom_bond_keys', 'atom_neighborhoods',
-    'atom_inchi_numbers', 'inchi', 'stereo_inchi', 'atom_stereo_coordinates',
-    # transformations
-    'implicit', 'explicit', 'explicit_stereo_sites', 'delete_atoms',
-    'add_explicit_hydrogens', 'subgraph', 'subgraph_by_bonds', 'relabel',
-    'reflection', 'subresonances', 'lowspin_resonance',
-    # comparisons
-    'backbone_isomorphic', 'backbone_isomorphism',
+    # # value setters
+    'set_atom_implicit_hydrogen_valences',
+    'set_atom_stereo_parities',
+    'set_bond_orders',
+    'set_bond_stereo_parities',
+    # # transformations
+    'without_bond_orders',
+    'without_stereo_parities',
+
+    # graph theory library
+    # # atom properties
+    'atom_neighbor_keys',
+    'atom_bond_keys',
+    'atom_neighborhoods',
+    # # bond properties
+    'bond_neighbor_keys',
+    'bond_neighborhoods',
+    # # other properties
+    'branch',
+    'branch_bond_keys',
+    'rings',
+    'rings_bond_keys',
+    'subgraph',
+    'bond_induced_subgraph',
+    # # transformations
+    'relabel',
+    'delete_atoms',
+
+    # chemical connectivity graph library
+    # # atom properties
+    'atom_explicit_hydrogen_valences',
+    'atom_explicit_hydrogen_keys',
+    # # other properties
+    'backbone_keys',
+    'explicit_hydrogen_keys',
+    # # transformations
+    'add_explicit_hydrogens',
+    'implicit',
+    'explicit',
+    # # comparisons
+    'backbone_isomorphic',
+    'backbone_isomorphism',
+    'backbone_unique',
+
+    # inchi conversion library
+    'atom_inchi_numbers',
+    'inchi',
+    'stereo_inchi_from_coordinates',
+
+    # resonance library
+    # # atom properties
+    'atom_bond_valences',
+    'atom_radical_valences',
+    # # bond properties
+    'resonance_dominant_bond_orders',
+    # # other properties
+    'maximum_spin_multiplicity',
+    'possible_spin_multiplicities',
+    # # transformations
+    'resonances',
+    'subresonances',
+    'dominant_resonances',
+    'dominant_resonance',
+
+    # stereo library
+    # # properties
+    'stereo_inchi',
+    'is_chiral',
+    'atom_stereo_keys',
+    'bond_stereo_keys',
+    'stereogenic_atom_keys',
+    'stereogenic_bond_keys',
+    # # transformations
+    'reflection',
+    'stereomers',
+    'substereomers',
+    'enantiomerically_unique',
+
     # submodules
-    'to_inchi',
+    'dict',
 ]

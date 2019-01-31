@@ -10,6 +10,7 @@ requirements:
     build:
         - python=2
     run:
+        - python
         - numpy
         - pandas
         - matplotlib
@@ -20,6 +21,7 @@ requirements:
         - future
         - flake8
         - pylint
+        - rdkit::rdkit
         - openbabel::openbabel
         - conda-forge::xorg-libxrender
         - pacchem::x2z

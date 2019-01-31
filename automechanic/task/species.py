@@ -93,14 +93,7 @@ def _handle_stereo_by_picking(tbl):
     tbl = tbl.copy()
     # use coordinates to get stereo assignments
     ichs = tbl[par.SPC.ID_ICH_KEY]
-    # debug
-    import sys
-    for ich in ichs:
-        print(ich)
-        sys.stdout.flush()
-        mol.geom.inchi(mol.inchi.geometry(ich))
-    # debug
-    ichs = list(map(mol.geom.inchi, map(mol.inchi.geometry, ichs)))
+    ichs = list(map(mol.geom.stereo_inchi, map(mol.inchi.geometry, ichs)))
     assert not any(map(mol.inchi.has_unknown_stereo_elements, ichs))
     tbl[par.SPC.ID_ICH_KEY] = ichs
     return tbl
