@@ -2,16 +2,15 @@
 """
 import itertools
 import numpy
-from .graph.to_inchi import (with_atom_inchi_numbers as
-                             _graph_to_inchi_with_atom_inchi_numbers)
+from .graph import (stereo_inchi_from_coordinates as
+                    _stereo_inchi_from_coordinates)
 
 
-def inchi(geo):
+def stereo_inchi(geo):
     """ InChI string of a cartesian geometry
     """
     cgr, atm_xyz_dct = _connectivity_graph_and_atom_coordinates(geo)
-    ich, _ = _graph_to_inchi_with_atom_inchi_numbers(
-        cgr, atm_xyz_dct=atm_xyz_dct)
+    ich = _stereo_inchi_from_coordinates(cgr, atm_xyz_dct)
     return ich
 
 

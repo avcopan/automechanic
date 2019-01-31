@@ -283,10 +283,10 @@ PYBEL_FAIL_ICHS = (
     'InChI=1S/C7H15O4/c1-2-4-7(11-9)5-3-6-10-8/h7-8H,2-6H2,1H3')
 
 
-def test__geom__inchi():
+def test__geom__stereo_inchi():
     """ test mol.geom.inchi
     """
-    assert mol.geom.inchi(C2H2F2_GEO) == C2H2F2_ICH
+    assert mol.geom.stereo_inchi(C2H2F2_GEO) == C2H2F2_ICH
 
 
 def test__smiles__inchi():
@@ -561,7 +561,7 @@ if __name__ == '__main__':
     # test__inchi__key__second_hash()
     # test__inchi__key__is_standard_neutral()
     # test__geom__connectivity_graph()
-    # test__geom__inchi()
+    # test__geom__stereo_inchi()
     # test__inchi__geometry()
     # test__inchi__connectivity_graph()
     test__inchi__stereo_graph()
