@@ -61,6 +61,6 @@ def _stereochemistry_segment(ich):
 
 def _inchi_hash_information(ich):
     smi = mol.inchi.smiles(ich)
-    inf_dct = {par.SPC.ID_ICH_KEY: ich,
-               par.SPC.ID_SMI_KEY: smi}
+    inf_dct = {par.SPC.INP_ID_ICH_KEY: ich,
+               par.SPC.INP_ID_SMI_KEY: smi}
     return inf_dct

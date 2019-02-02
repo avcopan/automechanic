@@ -6,9 +6,8 @@ from .arg import specifier_from_kernel as specifier
 from .clihelp import call_subcommand
 from .clihelp import call_task
 from .. import task
+from .. import params as par
 
-RXN_CSV_DEF = 'reactions.csv'
-SPC_CSV_DEF = 'species.csv'
 RXN_CSV_CHAR = 'r'
 SPC_CSV_CHAR = 's'
 
@@ -17,7 +16,7 @@ FILESYSTEM_NAME = 'automech_fs'
 FILESYSTEM_PREFIX_DEF = os.path.join(HOME_DIR, FILESYSTEM_NAME)
 FILESYSTEM_PREFIX_CHAR = 'f'
 
-STEREO_HANDLING_CHAR = 't'
+STEREO_MODE_CHAR = 'm'
 
 
 def automech(argt):
@@ -26,8 +25,9 @@ def automech(argt):
     call_subcommand(
         argt,
         subcmds=(
-            ('chemkin', chemkin),
-            ('species', species),
+            (par.CHK_ENG, chemkin),
+            (par.SPC_ENG, species),
+            (par.RXN_ENG, reactions),
         )
     )
 
@@ -38,17 +38,17 @@ def chemkin(argt):
     call_subcommand(
         argt,
         subcmds=(
-            ('to_csv', chemkin__to_csv),
+            (par.PRS_ENG, chemkin__parse),
         )
     )
 
 
-def chemkin__to_csv(argt):
+def chemkin__parse(argt):
     """ parse CHEMKIN mechanism
     """
     call_task(
         argt,
-        task.chemkin.to_csv,
+        task.chemkin.parse,
         specs=(
             specifier(
                 al.MECHANISM_TXT, inp=True,
@@ -59,11 +59,13 @@ def chemkin__to_csv(argt):
             ),
             specifier(
                 al.REACTIONS_CSV, out=True, opt_char=RXN_CSV_CHAR.upper(),
-                extra_kwargs=(('default', RXN_CSV_DEF),),
+                extra_kwargs=(
+                    ('default', task.chemkin.DEFS.PARSE.RXN_CSV_DEF),),
             ),
             specifier(
                 al.SPECIES_CSV, out=True, opt_char=SPC_CSV_CHAR.upper(),
-                extra_kwargs=(('default', SPC_CSV_DEF),),
+                extra_kwargs=(
+                    ('default', task.chemkin.DEFS.PARSE.SPC_CSV_DEF),),
             ),
         )
     )
@@ -75,36 +77,43 @@ def species(argt):
     call_subcommand(
         argt,
         subcmds=(
-            ('to_inchi', species__to_inchi),
-            ('filesystem', species__filesystem),
+            (par.ICH_ENG, species__inchi),
+            (par.FLS_ENG, species__filesystem),
         )
     )
 
 
-def species__to_inchi(argt):
+def species__inchi(argt):
     """ expand species into their possible stereoisomers
     """
     call_task(
         argt,
-        task.species.to_inchi,
+        task.species.inchi,
         specs=(
             specifier(
                 al.SPECIES_ID,
-                allowed_values=task.species.VALS.TOxINCHI.SPC_ID_KEY,
+                allowed_values=task.species.VALS.INCHI.INP_ID_KEY,
             ),
             specifier(
                 al.SPECIES_CSV, inp=True,
             ),
             specifier(
                 al.SPECIES_CSV, out=True, opt_char=SPC_CSV_CHAR.upper(),
-                extra_kwargs=(('default', SPC_CSV_DEF),),
+                extra_kwargs=(
+                    ('default', task.species.DEFS.INCHI.SPC_CSV),),
+            ),
+            specifier(
+                al.STEREO_MODE, opt_char=STEREO_MODE_CHAR,
+                allowed_values=task.species.VALS.INCHI.STEREO_MODE,
+                extra_kwargs=(
+                    ('default', task.species.DEFS.INCHI.STEREO_MODE),)
             ),
         )
     )
 
 
 def species__filesystem(argt):
-    """ fill in species guess geometries
+    """ create the species filesystem
     """
     call_task(
         argt,
@@ -115,13 +124,8 @@ def species__filesystem(argt):
             ),
             specifier(
                 al.SPECIES_CSV, out=True, opt_char=SPC_CSV_CHAR.upper(),
-                extra_kwargs=(('default', SPC_CSV_DEF),),
-            ),
-            specifier(
-                al.STEREO_HANDLING, opt_char=STEREO_HANDLING_CHAR,
-                allowed_values=task.species.VALS.FILESYSTEM.STEREO_HANDLING,
                 extra_kwargs=(
-                    ('default', task.species.DEFS.FILESYSTEM.STEREO_HANDLING),)
+                    ('default', task.species.DEFS.FILESYSTEM.SPC_CSV),),
             ),
             specifier(
                 al.FILESYSTEM_PREFIX, out=True,
@@ -130,3 +134,20 @@ def species__filesystem(argt):
             ),
         )
     )
+
+
+def reactions(argt):
+    """ reactions sub-command
+    """
+    call_subcommand(
+        argt,
+        subcmds=(
+            ('filesystem', reactions__filesystem),
+        )
+    )
+
+
+def reactions__filesystem(argt):
+    """ create the reactions filesystem
+    """
+    raise NotImplementedError(argt)

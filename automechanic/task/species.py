@@ -10,101 +10,111 @@ from ..iohelp import timestamp_if_exists
 
 class VALS():
     """ function argument values """
-    class TOxINCHI():
+    class INCHI():
         """_"""
-        SPC_ID_KEY = (par.SPC.ID_SMI_KEY, par.SPC.ID_ICH_KEY)
+        INP_ID_KEY = (par.SPC.INP_ID_SMI_KEY, par.SPC.INP_ID_ICH_KEY)
+        STEREO_MODE = (par.SPC.EXPAND_STEREO, par.SPC.PICK_STEREO)
 
     class FILESYSTEM():
         """_"""
-        STEREO_HANDLING = (par.SPC.EXPAND_STEREO, par.SPC.PICK_STEREO)
 
 
 class DEFS():
     """ function argument defaults"""
+    class INCHI():
+        """_"""
+        SPC_CSV = par.SPC.IO.INCHI_CSV
+        STEREO_MODE = par.SPC.PICK_STEREO
+
     class FILESYSTEM():
         """_"""
-        STEREO_HANDLING = par.SPC.PICK_STEREO
+        SPC_CSV = par.SPC.IO.FILESYSTEM_CSV
+        # RXN_CSV = par.RXN.IO.FILESYSTEM_CSV
 
 
-def to_inchi(spc_id_key, spc_csv, spc_csv_out, logger):
+def inchi(inp_id_key, spc_csv, spc_csv_out, stereo_mode, logger):
     """ convert species identifiers to InChI
     """
-    assert spc_id_key in VALS.TOxINCHI.SPC_ID_KEY
+    assert inp_id_key in VALS.INCHI.INP_ID_KEY
+    assert stereo_mode in VALS.INCHI.STEREO_MODE
 
-    logger.info("Reading in {:s}".format(spc_csv))
-    tbl = tab.read_csv(spc_csv)
-
-    logger.info("Converting to InChI")
-    tbl = _to_inchi(tbl, spc_id_key)
-
-    logger.info("Writing to {:s}".format(spc_csv_out))
-    timestamp_if_exists(spc_csv_out)
-    tab.write_csv(spc_csv_out, tbl)
+    tbl = _read_csv(spc_csv, logger)
+    tbl = _create_inchi_table(tbl, inp_id_key, logger)
+    tbl = _assign_stereo(tbl, mode=stereo_mode, logger=logger)
+    _write_csv(spc_csv_out, tbl, logger)
 
 
-def filesystem(spc_csv, spc_csv_out, stereo_handling, filesystem_prefix,
-               logger):
+def filesystem(spc_csv, spc_csv_out, filesystem_prefix, logger):
     """ chart the species filesystem structure
     """
-    assert stereo_handling in VALS.FILESYSTEM.STEREO_HANDLING
 
+    tbl = _read_csv(spc_csv, logger)
+    tbl = _create_filesystem(tbl, fs_root_pth=filesystem_prefix, logger=logger)
+    _write_csv(spc_csv_out, tbl, logger)
+
+
+def _read_csv(spc_csv, logger):
     logger.info("Reading in {:s}".format(spc_csv))
+
     tbl = tab.read_csv(spc_csv)
-
-    logger.info("Handling stereo in mode '{:s}'".format(stereo_handling))
-    tbl = _handle_stereo(tbl, mode=stereo_handling)
-
-    logger.info("Creating filesystem at '{:s}'".format(filesystem_prefix))
-    tbl = _create_filesystem(tbl, fs_root_pth=filesystem_prefix)
-
-    logger.info("Writing to {:s}".format(spc_csv_out))
-    timestamp_if_exists(spc_csv_out)
-    tab.write_csv(spc_csv_out, tbl)
-
-    logger.info(filesystem_prefix)
+    return tbl
 
 
-def _to_inchi(tbl, spc_id_key):
-    assert spc_id_key in (par.SPC.ID_SMI_KEY, par.SPC.ID_ICH_KEY)
+def _write_csv(spc_csv, tbl, logger):
+    logger.info("Writing to {:s}".format(spc_csv))
+
+    timestamp_if_exists(spc_csv)
+    tab.write_csv(spc_csv, tbl)
+
+
+def _create_inchi_table(tbl, inp_id_key, logger):
+    assert inp_id_key in (par.SPC.INP_ID_SMI_KEY, par.SPC.INP_ID_ICH_KEY)
+    ich_key = par.SPC.ICH_KEY
+    action = ("Calculating" if inp_id_key == ich_key else "Recalculating")
+    logger.info("{:s} '{:s}' from '{:s}'".format(action, ich_key, inp_id_key))
+
     tbl = tab.enforce_schema(tbl,
-                             keys=(spc_id_key,),
-                             typs=(par.SPC.TAB.ID_TYP,))
+                             keys=(inp_id_key,),
+                             typs=(par.SPC.TAB.INP_ID_TYP,))
 
-    conv_ = (mol.inchi.recalculate if spc_id_key == par.SPC.ID_ICH_KEY else
+    conv_ = (mol.inchi.recalculate if inp_id_key == par.SPC.INP_ID_ICH_KEY else
              mol.smiles.inchi)
 
-    sids = tbl[spc_id_key]
+    sids = tbl[inp_id_key]
     ichs = list(map(conv_, sids))
-    tbl = tbl[[key for key in tab.keys_(tbl) if key != spc_id_key]]
-    tbl[par.SPC.ID_ICH_KEY] = ichs
+    tbl = tbl[[key for key in tab.keys_(tbl) if key != inp_id_key]]
+    tbl[par.SPC.INP_ID_ICH_KEY] = ichs
     return tbl
 
 
-def _handle_stereo(tbl, mode):
+def _assign_stereo(tbl, mode, logger):
     assert mode in (par.SPC.EXPAND_STEREO, par.SPC.PICK_STEREO)
-    return (_handle_stereo_by_expanding(tbl) if mode == par.SPC.EXPAND_STEREO
-            else _handle_stereo_by_picking(tbl))
+    logger.info("Assigning stereo in mode '{:s}'".format(mode))
+
+    tbl = (_assign_stereo_by_expanding(tbl) if mode == par.SPC.EXPAND_STEREO
+           else _assign_stereo_by_picking(tbl))
+    return tbl
 
 
-def _handle_stereo_by_picking(tbl):
+def _assign_stereo_by_picking(tbl):
     tbl = tab.enforce_schema(tbl,
-                             keys=(par.SPC.ID_ICH_KEY,),
-                             typs=(par.SPC.TAB.ID_TYP,))
+                             keys=(par.SPC.INP_ID_ICH_KEY,),
+                             typs=(par.SPC.TAB.INP_ID_TYP,))
     tbl = tbl.copy()
     # use coordinates to get stereo assignments
-    ichs = tbl[par.SPC.ID_ICH_KEY]
+    ichs = tbl[par.SPC.INP_ID_ICH_KEY]
     ichs = list(map(mol.geom.stereo_inchi, map(mol.inchi.geometry, ichs)))
     assert not any(map(mol.inchi.has_unknown_stereo_elements, ichs))
-    tbl[par.SPC.ID_ICH_KEY] = ichs
+    tbl[par.SPC.INP_ID_ICH_KEY] = ichs
     return tbl
 
 
-def _handle_stereo_by_expanding(tbl):
+def _assign_stereo_by_expanding(tbl):
     tbl = tab.enforce_schema(tbl,
-                             keys=(par.SPC.ID_ICH_KEY,),
-                             typs=(par.SPC.TAB.ID_TYP,))
+                             keys=(par.SPC.INP_ID_ICH_KEY,),
+                             typs=(par.SPC.TAB.INP_ID_TYP,))
 
-    ichs = tbl[par.SPC.ID_ICH_KEY]
+    ichs = tbl[par.SPC.INP_ID_ICH_KEY]
     ichsts_lst = list(map(mol.inchi.compatible_stereoisomers, ichs))
 
     idx_save_key = tab.next_index_save_key(tbl)
@@ -114,17 +124,19 @@ def _handle_stereo_by_expanding(tbl):
     vals = [[idx, ichst]
             for idx, ichsts in zip(tbl_idxs, ichsts_lst) for ichst in ichsts]
     ste_tbl = tab.from_records(vals,
-                               keys=(idx_save_key, par.SPC.ID_ICH_KEY),
-                               typs=(tab.IDX_TYP, par.SPC.TAB.ID_TYP))
+                               keys=(idx_save_key, par.SPC.INP_ID_ICH_KEY),
+                               typs=(tab.IDX_TYP, par.SPC.TAB.INP_ID_TYP))
 
-    keys = [key for key in tab.keys_(tbl) if key != par.SPC.ID_ICH_KEY]
+    keys = [key for key in tab.keys_(tbl) if key != par.SPC.INP_ID_ICH_KEY]
     tbl = tab.left_join(tbl[keys], ste_tbl, key=idx_save_key)
     return tbl
 
 
-def _create_filesystem(tbl, fs_root_pth):
-    id_keys = (par.SPC.ID_ICH_KEY, par.SPC.MULT_KEY)
-    id_typs = (par.SPC.TAB.ID_TYP, par.SPC.TAB.MULT_TYP)
+def _create_filesystem(tbl, fs_root_pth, logger):
+    logger.info("Creating filesystem at '{:s}'".format(fs_root_pth))
+
+    id_keys = (par.SPC.INP_ID_ICH_KEY, par.SPC.MULT_KEY)
+    id_typs = (par.SPC.TAB.INP_ID_TYP, par.SPC.TAB.MULT_TYP)
     tbl = tab.enforce_schema(tbl, keys=id_keys, typs=id_typs)
 
     def __create_branch(ich, mult):

@@ -76,8 +76,8 @@ SPECIES_ID = (
     )
 )
 
-STEREO_HANDLING = (
-    'stereo_handling',
+STEREO_MODE = (
+    'stereo_mode',
     (
         ('type', str),
         ('help', "How to handle stereoisomers")

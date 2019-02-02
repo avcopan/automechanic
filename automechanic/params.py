@@ -2,28 +2,61 @@
 """
 from . import tab
 
+# some english names for things
+CHK_ENG = 'chemkin'
+SPC_ENG = 'species'
+RXN_ENG = 'reactions'
+
+PRS_ENG = 'parse'
+ICH_ENG = 'inchi'
+FLS_ENG = 'filesystem'
+
+# extensions
+CSV_EXT = 'csv'
+
+# common schema parameters
 _NAME_KEY = 'name'
 _NAME_TYP = tab.dt_(str)
-_ID_ICH_KEY = 'inchi'
-_ID_SMI_KEY = 'smiles'
-_ID_TYP = tab.dt_(str)
+_INP_ID_ICH_KEY = ICH_ENG
+_INP_ID_SMI_KEY = 'smiles'
+_INP_ID_TYP = tab.dt_(str)
+_ICH_KEY = ICH_ENG
+_ICH_TYP = tab.dt_(str)
 _MULT_KEY = 'mult'
 _MULT_TYP = tab.dt_(int)
 _FILESYSTEM_PATH_KEY = 'path'
 _FILESYSTEM_PATH_TYP = tab.dt_(str)
+_STRING_PLACEHOLDER = '{:s}'
 
 
 class SPC():
     """ species parameters
     """
-    ID_ICH_KEY = _ID_ICH_KEY
-    ID_SMI_KEY = _ID_SMI_KEY
+    ENGLISH_NAME = SPC_ENG
+
+    INP_ID_ICH_KEY = _INP_ID_ICH_KEY
+    INP_ID_SMI_KEY = _INP_ID_SMI_KEY
     MULT_KEY = _MULT_KEY
+
+    ICH_KEY = _ICH_KEY
 
     FILESYSTEM_DIR_NAME = 'SPC'
 
     PICK_STEREO = 'pick'
     EXPAND_STEREO = 'expand'
+
+    class IO():
+        """ file and directory names for CLI input/output
+        """
+        _CSV_WITH_KEYWORD = '{:s}_{:s}.{:s}'.format(
+            SPC_ENG, _STRING_PLACEHOLDER, CSV_EXT)
+
+        # name only
+        CHEMKIN_CSV = _CSV_WITH_KEYWORD.format(CHK_ENG)
+        # name and inchi
+        INCHI_CSV = _CSV_WITH_KEYWORD.format(ICH_ENG)
+        # name and inchi and filesystem path
+        FILESYSTEM_CSV = _CSV_WITH_KEYWORD.format(FLS_ENG)
 
     class TAB():
         """ species table parameters
@@ -31,7 +64,8 @@ class SPC():
         NAME_KEY = _NAME_KEY
         NAME_TYP = _NAME_TYP
 
-        ID_TYP = _ID_TYP
+        INP_ID_TYP = _INP_ID_TYP
+        ICH_TYP = _ICH_TYP
 
         MULT_TYP = _MULT_TYP
 
@@ -50,10 +84,20 @@ class SPC():
 class RXN():
     """ reaction parameters
     """
+    ENGLISH_NAME = RXN_ENG
+
     MULT_KEY = _MULT_KEY
-    ID_ICH_KEY = _ID_ICH_KEY
 
     FILESYSTEM_DIR_NAME = 'RXN'
+
+    class IO():
+        """ file and directory names for CLI input/output
+        """
+        _CSV_WITH_KEYWORD = '{:s}_{:s}.{:s}'.format(
+            RXN_ENG, _STRING_PLACEHOLDER, CSV_EXT)
+
+        # name only
+        CHEMKIN_CSV = _CSV_WITH_KEYWORD.format(CHK_ENG)
 
     class TAB():
         """ species table parameters
@@ -61,7 +105,7 @@ class RXN():
         NAME_KEY = _NAME_KEY
         NAME_TYP = _NAME_TYP
 
-        ID_TYP = _ID_TYP
+        INP_ID_TYP = _INP_ID_TYP
 
         MULT_TYP = _MULT_TYP
 

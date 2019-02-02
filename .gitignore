@@ -110,13 +110,8 @@ venv.bak/
 database/
 
 # Ignore the example outputs
-example/reactions.csv
-example/species.csv
-example/abstractions.csv
-example/abstrs
-example/geoms
 tmp/
-example-copy/
+examples-copy/
 init.log*
 
 # Mac files

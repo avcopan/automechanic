@@ -7,4 +7,6 @@ disable=
     too-many-arguments,
     too-few-public-methods,
     redefined-builtin,
-    assignment-from-no-return
+    assignment-from-no-return,
+    no-init,
+    old-style-class

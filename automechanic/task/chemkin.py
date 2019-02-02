@@ -1,4 +1,4 @@
-""" tasks that operate on CHEMKIN-format files
+""" tasks that operate on chemkin-format files
 """
 from .. import params as par
 from .. import tab
@@ -9,28 +9,47 @@ from ..parse.chemkin import thermo_data
 from ..parse.chemkin import reaction_data
 
 
-def to_csv(mech_txt_lst, rxn_csv_out, spc_csv_out, logger):
-    """ parse CHEMKIN information to CSV
+class DEFS():
+    """ function argument defaults"""
+    class PARSE():
+        """_"""
+        SPC_CSV_DEF = par.SPC.IO.CHEMKIN_CSV
+        RXN_CSV_DEF = par.RXN.IO.CHEMKIN_CSV
+
+
+def parse(mech_txt_lst, rxn_csv_out, spc_csv_out, logger):
+    """ parse chemkin information to CSV
     """
-    logger.info("Reading in mechanism file(s)")
+    mech_str = _read_mechanism_string(mech_txt_lst, logger)
+
+    spc_eng = par.SPC.ENGLISH_NAME
+    rxn_eng = par.RXN.ENGLISH_NAME
+
+    spc_tbl = _create_species_table(mech_str, logger)
+    _write_csv_file(spc_eng, spc_csv_out, spc_tbl, logger)
+
+    rxn_tbl = _create_reactions_table(mech_str, logger)
+    _write_csv_file(rxn_eng, rxn_csv_out, rxn_tbl, logger)
+
+
+def _read_mechanism_string(mech_txt_lst, logger):
+    logger.info("Reading in chemkin mechanism file(s)")
+
     mech_str = '\n'.join(map(read_string, mech_txt_lst))
-
-    logger.info("Finding species data")
-    spc_tbl = _species_table(mech_str)
-
-    logger.info("Writing species data to {:s}".format(spc_csv_out))
-    timestamp_if_exists(spc_csv_out)
-    tab.write_csv(spc_csv_out, spc_tbl, float_format='%.8f')
-
-    logger.info("Finding reactions data")
-    rxn_tbl = _reactions_table(mech_str)
-
-    logger.info("Writing reaction data to {:s}".format(spc_csv_out))
-    timestamp_if_exists(rxn_csv_out)
-    tab.write_csv(rxn_csv_out, rxn_tbl, float_format='%.8f')
+    return mech_str
 
 
-def _species_table(mech_str):
+def _write_csv_file(eng, csv, tbl, logger):
+    logger.info("Writing {:s} data to {:s}".format(eng, csv))
+
+    timestamp_if_exists(csv)
+    tab.write_csv(csv, tbl, float_format='%.6e')
+
+
+def _create_species_table(mech_str, logger):
+    eng = par.SPC.ENGLISH_NAME
+    logger.info("Finding {:s} data in chemkin mechanism string".format(eng))
+
     spcs = species_names(mech_str)
     thm_dat_lst = thermo_data(mech_str)
     assert len(thm_dat_lst) == len(spcs)
@@ -42,7 +61,10 @@ def _species_table(mech_str):
     return spc_tbl
 
 
-def _reactions_table(mech_str):
+def _create_reactions_table(mech_str, logger):
+    eng = par.RXN.ENGLISH_NAME
+    logger.info("Finding {:s} data in chemkin mechanism string".format(eng))
+
     rxn_dat_lst = reaction_data(mech_str)
     keys = (par.RXN.TAB.NAME_KEY, par.RXN.TAB.ARRH_KEYS)
     typs = (par.RXN.TAB.NAME_TYP, par.RXN.TAB.ARRH_TYP)
