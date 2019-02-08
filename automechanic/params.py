@@ -65,8 +65,11 @@ class SPC():
         NAME_TYP = _NAME_TYP
 
         INP_ID_TYP = _INP_ID_TYP
+
+        ICH_KEY = _ICH_KEY
         ICH_TYP = _ICH_TYP
 
+        MULT_KEY = _MULT_KEY
         MULT_TYP = _MULT_TYP
 
         FILESYSTEM_PATH_KEY = _FILESYSTEM_PATH_KEY

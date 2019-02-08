@@ -1,11 +1,12 @@
-""" tasks that operate on CSVs with species information
+""" tasks operating on species
 """
 from .. import params as par
 from .. import tab
 from .. import mol
 from .. import fslib
 from .. import fs
-from ..iohelp import timestamp_if_exists
+from ._util import read_csv as _read_csv
+from ._util import write_csv as _write_csv
 
 
 class VALS():
@@ -39,7 +40,7 @@ def inchi(inp_id_key, spc_csv, spc_csv_out, stereo_mode, logger):
     assert stereo_mode in VALS.INCHI.STEREO_MODE
 
     tbl = _read_csv(spc_csv, logger)
-    tbl = _create_inchi_table(tbl, inp_id_key, logger)
+    tbl = _inchi_table(tbl, inp_id_key, logger)
     tbl = _assign_stereo(tbl, mode=stereo_mode, logger=logger)
     _write_csv(spc_csv_out, tbl, logger)
 
@@ -53,21 +54,7 @@ def filesystem(spc_csv, spc_csv_out, filesystem_prefix, logger):
     _write_csv(spc_csv_out, tbl, logger)
 
 
-def _read_csv(spc_csv, logger):
-    logger.info("Reading in {:s}".format(spc_csv))
-
-    tbl = tab.read_csv(spc_csv)
-    return tbl
-
-
-def _write_csv(spc_csv, tbl, logger):
-    logger.info("Writing to {:s}".format(spc_csv))
-
-    timestamp_if_exists(spc_csv)
-    tab.write_csv(spc_csv, tbl)
-
-
-def _create_inchi_table(tbl, inp_id_key, logger):
+def _inchi_table(tbl, inp_id_key, logger):
     assert inp_id_key in (par.SPC.INP_ID_SMI_KEY, par.SPC.INP_ID_ICH_KEY)
     ich_key = par.SPC.ICH_KEY
     action = ("Calculating" if inp_id_key == ich_key else "Recalculating")
@@ -135,8 +122,8 @@ def _assign_stereo_by_expanding(tbl):
 def _create_filesystem(tbl, fs_root_pth, logger):
     logger.info("Creating filesystem at '{:s}'".format(fs_root_pth))
 
-    id_keys = (par.SPC.INP_ID_ICH_KEY, par.SPC.MULT_KEY)
-    id_typs = (par.SPC.TAB.INP_ID_TYP, par.SPC.TAB.MULT_TYP)
+    id_keys = (par.SPC.TAB.ICH_KEY, par.SPC.TAB.MULT_KEY)
+    id_typs = (par.SPC.TAB.ICH_TYP, par.SPC.TAB.MULT_TYP)
     tbl = tab.enforce_schema(tbl, keys=id_keys, typs=id_typs)
 
     def __create_branch(ich, mult):
@@ -150,3 +137,19 @@ def _create_filesystem(tbl, fs_root_pth, logger):
         tbl = tab.left_join(tbl, pth_tbl)
 
     return tbl
+
+
+# used elswhere -- decide if this is the best place
+def grouped_identifier_lists(tbl, logger):
+    """ species identifier lists, grouped by name
+    """
+    logger.info("Determining species identifiers, by name")
+
+    keys = (par.SPC.TAB.NAME_KEY, par.SPC.TAB.ICH_KEY, par.SPC.TAB.MULT_KEY)
+    typs = (par.SPC.TAB.NAME_TYP, par.SPC.TAB.ICH_TYP, par.SPC.TAB.MULT_TYP)
+    tbl = tab.enforce_schema(tbl, keys=keys, typs=typs)
+
+    key1 = par.SPC.TAB.NAME_KEY
+    key2 = (par.SPC.TAB.ICH_KEY, par.SPC.TAB.MULT_KEY)
+    ids_dct = tab.group_dictionary(tbl, key1, key2)
+    return ids_dct

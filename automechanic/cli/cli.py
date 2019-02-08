@@ -142,12 +142,23 @@ def reactions(argt):
     call_subcommand(
         argt,
         subcmds=(
-            ('filesystem', reactions__filesystem),
+            ('classify', reactions__classify),
         )
     )
 
 
-def reactions__filesystem(argt):
-    """ create the reactions filesystem
+def reactions__classify(argt):
+    """ classify reactions by type
     """
-    raise NotImplementedError(argt)
+    call_task(
+        argt,
+        task.reactions.classify,
+        specs=(
+            specifier(
+                al.REACTIONS_CSV, inp=True,
+            ),
+            specifier(
+                al.SPECIES_CSV, inp=True,
+            ),
+        )
+    )

@@ -143,6 +143,21 @@ def test__right_join():
     print(tbl3)
 
 
+def test__group_dictionary():
+    """ test tab.group_dictionary
+    """
+    vals = tab.vals_(TBL)
+    keys = tab.keys_(TBL)
+    typs = [int] * len(keys)
+    tbl = tab.from_records(vals, keys, typs=typs)
+    tbl[A_KEY] = tbl[A_KEY] % 2
+    dct = tab.group_dictionary(tbl, A_KEY, [B_KEYS, C_KEY])
+    assert dct == {
+        0: (((1, 2, 3), 6), ((11, 12, 13), 36), ((21, 22, 23), 66)),
+        1: (((6, 7, 8), 21), ((16, 17, 18), 51))
+    }
+
+
 if __name__ == '__main__':
     test__iter_()
     test__from_records()
@@ -153,3 +168,4 @@ if __name__ == '__main__':
     test__next_index_save_key()
     test__save_index()
     test__right_join()
+    test__group_dictionary()

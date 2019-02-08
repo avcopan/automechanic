@@ -225,6 +225,14 @@ def _index_save_ids(tbl):
     return sids
 
 
+def group_dictionary(tbl, key1, key2):
+    """ get a dictionary from some column(s) onto others
+    """
+    grps = tbl.groupby(_fancy_selector(key1))
+    dct = {grp_key: tuple(iter_(grp_tbl, key2)) for grp_key, grp_tbl in grps}
+    return dct
+
+
 # helpers
 def _iter_vals(tbl):
     """ iterate over values in a table or series
@@ -275,17 +283,22 @@ def _from_records(vals, keys, typs=None, idxs=None):
 
 
 # fancy helpers
+def _fancy_select(tbl, fancy_keys):
+    """ select individual columns and groups of columns
+    """
+    return tuple(tbl[_fancy_selector(fancy_key)] for fancy_key in fancy_keys)
+
+
+def _fancy_selector(fancy_key):
+    """ if this is a sequency of keys, return a list
+    """
+    return list(fancy_key) if _is_fancy(fancy_key) else fancy_key
+
+
 def _is_fancy(key):
     assert isinstance(key, _Sequence)
     return (isinstance(key, _Sequence)
             and not isinstance(key, (str, bytes, bytearray)))
-
-
-def _fancy_select(tbl, fancy_keys):
-    """ select individual columns and groups of columns
-    """
-    return tuple(tbl[list(key)] if _is_fancy(key) else tbl[key]
-                 for key in fancy_keys)
 
 
 def _from_fancy_records(fancy_vals, fancy_keys, group_typs=None, idxs=None):

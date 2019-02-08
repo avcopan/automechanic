@@ -2,5 +2,6 @@
 """
 from . import chemkin
 from . import species
+from . import reactions
 
-__all__ = ['chemkin', 'species']
+__all__ = ['chemkin', 'species', 'reactions']
