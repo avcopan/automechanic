@@ -1,13 +1,12 @@
 name: amenv
 
 channels:
-    - conda-forge
     - pacchem
     - rdkit
     - openbabel
 
 dependencies:
-    - python=3
+    - python
     - numpy
     - pandas
     - matplotlib
@@ -20,6 +19,6 @@ dependencies:
     - pylint
     - rdkit::rdkit
     - openbabel::openbabel
-    - conda-forge::xorg-libxrender
     - pacchem::autoparse
+    - pacchem::automol
     - pacchem::x2z

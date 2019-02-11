@@ -1,6 +1,6 @@
 """ functions for generating the species filesystem
 """
-from .. import mol
+import automol as mol
 from .. import params as par
 
 

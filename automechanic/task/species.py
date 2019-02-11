@@ -1,8 +1,8 @@
 """ tasks operating on species
 """
+import automol as mol
 from .. import params as par
 from .. import tab
-from .. import mol
 from .. import fslib
 from .. import fs
 from ._util import read_csv as _read_csv

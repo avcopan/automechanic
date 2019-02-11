@@ -9,7 +9,7 @@ jobs:
                 name: Create conda environment
                 command: |
                     apt-get update --yes
-                    apt-get install --yes libgl1-mesa-glx  # needed for matplotlib
+                    apt-get install --yes libgl1-mesa-glx libxrender-dev  # needed for matplotlib
                     conda env create -f environment.yml
             - run:
                 name: Run tests

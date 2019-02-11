@@ -23,5 +23,6 @@ requirements:
         - pylint
         - rdkit::rdkit
         - openbabel::openbabel
-        - conda-forge::xorg-libxrender
+        - pacchem::autoparse
+        - pacchem::automol
         - pacchem::x2z
