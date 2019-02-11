@@ -1,40 +1,41 @@
 """ CHEMKIN parsing
 """
 from itertools import chain
+from more_itertools import lstrip
+from more_itertools import split_before
 from numpy import multiply as _scale
-from ..rere.pattern import maybe
-from ..rere.pattern import escape
-from ..rere.pattern import capturing
-from ..rere.pattern import one_or_more
-from ..rere.pattern import zero_or_more
-from ..rere.pattern import one_of_these
-from ..rere.pattern import not_followed_by
-from ..rere.pattern_lib import STRING_START
-from ..rere.pattern_lib import LINE_START
-from ..rere.pattern_lib import LINE_END
-from ..rere.pattern_lib import ANY_CHAR
-from ..rere.pattern_lib import NONWHITESPACE
-from ..rere.pattern_lib import NONNEWLINE
-from ..rere.pattern_lib import NONNEWLINE_WHITESPACE
-from ..rere.pattern_lib import NEWLINE
-from ..rere.pattern_lib import DIGIT
-from ..rere.pattern_lib import UNSIGNED_FLOAT
-from ..rere.pattern_lib import PLUS
-from ..rere.pattern_lib import INTEGER
-from ..rere.pattern_lib import FLOAT
-from ..rere.pattern_lib import EXPONENTIAL_INTEGER
-from ..rere.pattern_lib import EXPONENTIAL_FLOAT
-from ..rere.find import has_match as find_if_has_match
-from ..rere.find import split as find_split
-from ..rere.find import remove as find_remove
-from ..rere.find import all_captures as find_captures
-from ..rere.find import split_words as find_split_words
-from ..rere.find import split_lines as find_split_lines
-from ..rere.find import strip_spaces as find_strip_spaces
-from ..rere.find import first_capture as find_first_capture
-from ..rere.find import headlined_sections as find_headlined_sections
+from autoparse.pattern import maybe
+from autoparse.pattern import escape
+from autoparse.pattern import capturing
+from autoparse.pattern import one_or_more
+from autoparse.pattern import zero_or_more
+from autoparse.pattern import one_of_these
+from autoparse.pattern import not_followed_by
+from autoparse.pattern import STRING_START
+from autoparse.pattern import LINE_START
+from autoparse.pattern import LINE_END
+from autoparse.pattern import WILDCARD
+from autoparse.pattern import NONSPACE
+from autoparse.pattern import LINESPACES
+from autoparse.pattern import NEWLINE
+from autoparse.pattern import NONNEWLINE
+from autoparse.pattern import DIGIT
+from autoparse.pattern import UNSIGNED_FLOAT
+from autoparse.pattern import PLUS
+from autoparse.pattern import INTEGER
+from autoparse.pattern import FLOAT
+from autoparse.pattern import EXPONENTIAL_INTEGER
+from autoparse.pattern import EXPONENTIAL_FLOAT
+from autoparse.find import has_match as find_if_has_match
+from autoparse.find import split as find_split
+from autoparse.find import remove as find_remove
+from autoparse.find import matcher as find_matcher
+from autoparse.find import all_captures as find_captures
+from autoparse.find import split_words as find_split_words
+from autoparse.find import split_lines as find_split_lines
+from autoparse.find import strip_spaces as find_strip_spaces
+from autoparse.find import first_capture as find_first_capture
 
-SPACES = one_or_more(NONNEWLINE_WHITESPACE)
 CHEMKIN_ARROW = maybe(escape('<')) + escape('=') + maybe(escape('>'))
 CHEMKIN_PLUS_EM = PLUS + 'M'
 CHEMKIN_PAREN_PLUS_EM = escape('(') + PLUS + 'M' + escape(')')
@@ -90,7 +91,7 @@ def reaction_data_strings(mech_str):
     """
     block_str = remove_blanks(reactions_block(mech_str))
     headline_pattern = CHEMKIN_ARROW
-    rxn_dat_lst = find_headlined_sections(headline_pattern, block_str)
+    rxn_dat_lst = _headlined_sections(headline_pattern, block_str)
     return rxn_dat_lst
 
 
@@ -100,7 +101,7 @@ def reaction_data_reaction_name(rxn_dstr):
     headline = find_split_lines(rxn_dstr)[0]
     number = one_of_these(
         [EXPONENTIAL_FLOAT, EXPONENTIAL_INTEGER, FLOAT, INTEGER])
-    pattern = (SPACES + number + SPACES + number + SPACES + number)
+    pattern = (LINESPACES + number + LINESPACES + number + LINESPACES + number)
     rxn = find_remove(pattern, headline)
     return rxn
 
@@ -118,13 +119,13 @@ def _split_reagent_string(rgt_str):
 
     def _interpret_reagent_count(rgt_cnt_str):
         _pattern = (STRING_START + capturing(maybe(DIGIT)) +
-                    capturing(one_or_more(ANY_CHAR)))
+                    capturing(one_or_more(NONSPACE)))
         cnt, rgt = find_first_capture(_pattern, rgt_cnt_str)
         cnt = int(cnt) if cnt else 1
         rgts = (rgt,) * cnt
         return rgts
 
-    rgt_str = find_remove(NONNEWLINE_WHITESPACE, rgt_str)
+    rgt_str = find_remove(LINESPACES, rgt_str)
     rgt_str = find_remove(CHEMKIN_PAREN_PLUS_EM, rgt_str)
     rgt_str = find_remove(CHEMKIN_PLUS_EM, rgt_str)
     pattern = PLUS + not_followed_by(PLUS)
@@ -139,8 +140,8 @@ def reaction_data_high_p_coeffs(rxn_dstr):
     headline = find_split_lines(rxn_dstr)[0]
     number = one_of_these(
         [EXPONENTIAL_FLOAT, EXPONENTIAL_INTEGER, FLOAT, INTEGER])
-    pattern = (SPACES + capturing(number) + SPACES + capturing(number) +
-               SPACES + capturing(number))
+    pattern = (LINESPACES + capturing(number) + LINESPACES +
+               capturing(number) + LINESPACES + capturing(number))
     captures = find_first_capture(pattern, headline)
     assert captures
     cfts = tuple(map(float, captures))
@@ -173,8 +174,8 @@ def thermo_data_strings(mech_str):
     start_pattern = LINE_START + not_followed_by(
         one_of_these([DIGIT, PLUS, escape('=')]))
     end_pattern = '1' + LINE_END
-    headline_pattern = start_pattern + one_or_more(ANY_CHAR) + end_pattern
-    thm_dstr_lst = find_headlined_sections(headline_pattern, block_str)
+    headline_pattern = start_pattern + one_or_more(NONNEWLINE) + end_pattern
+    thm_dstr_lst = _headlined_sections(headline_pattern, block_str)
     assert all(len(find_split_lines(thm_dstr)) == 4
                for thm_dstr in thm_dstr_lst)
     return thm_dstr_lst
@@ -183,7 +184,7 @@ def thermo_data_strings(mech_str):
 def thermo_data_species_name(thm_dstr):
     """ get the species name from a thermo data string
     """
-    pattern = STRING_START + capturing(one_or_more(NONWHITESPACE))
+    pattern = STRING_START + capturing(one_or_more(NONSPACE))
     spc = find_first_capture(pattern, thm_dstr)
     return spc
 
@@ -192,9 +193,9 @@ def thermo_data_temperatures(thm_dstr):
     """ get the common temperature from a thermo data string
     """
     headline = find_split_lines(thm_dstr)[0]
-    pattern = (SPACES + capturing(UNSIGNED_FLOAT) +
-               SPACES + capturing(UNSIGNED_FLOAT) +
-               SPACES + capturing(UNSIGNED_FLOAT))
+    pattern = (LINESPACES + capturing(UNSIGNED_FLOAT) +
+               LINESPACES + capturing(UNSIGNED_FLOAT) +
+               LINESPACES + capturing(UNSIGNED_FLOAT))
     captures = find_first_capture(pattern, headline)
     assert captures
     tmps = tuple(map(float, captures))
@@ -226,10 +227,10 @@ def reaction_unit_names(mech_str):
     a_unit_names, _ = zip(*A_UNITS)
     e_unit_names, _ = zip(*E_UNITS)
     a_pattern = (STRING_START +
-                 maybe(one_of_these(e_unit_names) + SPACES) +
+                 maybe(one_of_these(e_unit_names) + LINESPACES) +
                  capturing(one_of_these(a_unit_names)))
     e_pattern = (STRING_START +
-                 maybe(one_of_these(a_unit_names) + SPACES) +
+                 maybe(one_of_these(a_unit_names) + LINESPACES) +
                  capturing(one_of_these(e_unit_names)))
     a_unit_name = find_first_capture(a_pattern, block_str)
     e_unit_name = find_first_capture(e_pattern, block_str)
@@ -241,8 +242,8 @@ def thermo_t_common_default(mech_str):
     """
     block_str = remove_blanks(thermo_block(mech_str))
     pattern = (STRING_START +
-               UNSIGNED_FLOAT + SPACES +
-               capturing(UNSIGNED_FLOAT) + SPACES +
+               UNSIGNED_FLOAT + LINESPACES +
+               capturing(UNSIGNED_FLOAT) + LINESPACES +
                UNSIGNED_FLOAT)
     capture = find_first_capture(pattern, block_str)
     assert capture
@@ -273,23 +274,36 @@ def remove_comments(mech_str):
     """ remove comments
     """
     pattern = escape('!') + zero_or_more(NONNEWLINE)
-    return find_remove(pattern, mech_str)
+    clean_mech_str = find_remove(pattern, mech_str)
+    assert clean_mech_str is not None
+    return clean_mech_str
 
 
 def remove_blanks(mech_str):
     """ remove blank lines as well as leading and trailing blanks
     """
-    blank_line = LINE_START + zero_or_more(NONNEWLINE_WHITESPACE) + NEWLINE
-    trailing_blanks = zero_or_more(NONNEWLINE_WHITESPACE) + LINE_END
-    leading_blanks = LINE_START + zero_or_more(NONNEWLINE_WHITESPACE)
+    blank_line = LINE_START + maybe(LINESPACES) + NEWLINE
+    trailing_blanks = LINESPACES + LINE_END
+    leading_blanks = LINE_START + LINESPACES
     pattern = one_of_these([blank_line, trailing_blanks, leading_blanks])
     return find_remove(pattern, mech_str)
 
 
 def _block(mech_str, block_keys):
     start_key = one_of_these(block_keys)
-    contents = capturing(one_or_more(ANY_CHAR, greedy=False))
+    contents = capturing(one_or_more(WILDCARD, greedy=False))
     pattern = start_key + contents + 'END'
     mech_str = remove_comments(mech_str)
     block = find_first_capture(pattern, mech_str)
     return find_strip_spaces(block) if block else None
+
+
+def _headlined_sections(pattern, string):
+    """ return sections with headlines matching a pattern
+    """
+    lines = string.splitlines()
+    join_lines = '\n'.join
+    pattern_matcher = find_matcher(pattern)
+    lines = lstrip(lines, pred=lambda line: not pattern_matcher(line))
+    sections = list(map(join_lines, split_before(lines, pattern_matcher)))
+    return sections

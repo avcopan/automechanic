@@ -21,4 +21,5 @@ dependencies:
     - rdkit::rdkit
     - openbabel::openbabel
     - conda-forge::xorg-libxrender
+    - pacchem::autoparse
     - pacchem::x2z

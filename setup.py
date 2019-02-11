@@ -15,7 +15,6 @@ setup(name="automechanic",
                 "automechanic.mol.graph._inchi",
                 "automechanic.mol.graph._stereo",
                 "automechanic.parse",
-                "automechanic.rere",
                 "automechanic.fs",
                 "automechanic.fslib",
                 # deprecated:

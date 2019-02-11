@@ -20,6 +20,8 @@ jobs:
                     pytest -v --cov=automechanic .
                     flake8 --exit-zero automechanic
                     pylint --rcfile=../.pylintrc automechanic
+                    cd ../tests_old/
+                    pytest -v .
 workflows:
     version: 2
     build-all:

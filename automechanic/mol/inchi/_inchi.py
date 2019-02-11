@@ -2,22 +2,22 @@
 """
 import itertools
 from string import ascii_lowercase as _ascii_lowercase
+from autoparse.pattern import escape as _escape
+from autoparse.pattern import named_capturing as _named_capturing
+from autoparse.pattern import one_or_more as _one_or_more
+from autoparse.pattern import one_of_these as _one_of_these
+from autoparse.pattern import not_followed_by as _not_followed_by
+from autoparse.pattern import LOWERCASE_LETTER as _LOWERCASE_LETTER
+from autoparse.pattern import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
+from autoparse.pattern import NONSPACE as _NONSPACE
+from autoparse.pattern import STRING_START as _STRING_START
+from autoparse.pattern import STRING_END as _STRING_END
+from autoparse.find import first_named_capture as _first_named_capture
+from autoparse.find import all_captures as _all_captures
 from ._rdkit import from_inchi as _rdm_from_inchi
 from ._rdkit import to_inchi as _rdm_to_inchi
-from ...rere.pattern import escape as _escape
-from ...rere.pattern import named_capturing as _named_capturing
-from ...rere.pattern import one_or_more as _one_or_more
-from ...rere.pattern import one_of_these as _one_of_these
-from ...rere.pattern import not_followed_by as _not_followed_by
-from ...rere.pattern_lib import LOWERCASE_LETTER as _LOWERCASE_LETTER
-from ...rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
-from ...rere.pattern_lib import NONWHITESPACE as _NONWHITESPACE
-from ...rere.pattern_lib import STRING_START as _STRING_START
-from ...rere.pattern_lib import STRING_END as _STRING_END
-from ...rere.find import first_named_capture as _first_named_capture
-from ...rere.find import all_captures as _all_captures
 
-_NONWHITESPACES_NONGREEDY = _one_or_more(_NONWHITESPACE, greedy=False)
+_NONSPACES_NONGREEDY = _one_or_more(_NONSPACE, greedy=False)
 _INCHI_SUBLAYER_END = _one_of_these([_escape('/'), _STRING_END])
 _STEREO_UNKNOWN_VAL = 'u'
 _STEREO_UNDEFINED_VAL = '?'
@@ -33,7 +33,7 @@ def _key_layer(key):
         CONTENT_KEY = 'content'
 
         _START = _escape('/')
-        _LAYER = key + _named_capturing(_NONWHITESPACES_NONGREEDY,
+        _LAYER = key + _named_capturing(_NONSPACES_NONGREEDY,
                                         name=CONTENT_KEY)
         _END = _INCHI_SUBLAYER_END
 
@@ -53,7 +53,7 @@ class PARSE():
 
         _START = _STRING_START
         _LAYER = (_escape('InChI=') +
-                  _named_capturing(_NONWHITESPACES_NONGREEDY,
+                  _named_capturing(_NONSPACES_NONGREEDY,
                                    name=CONTENT_KEY))
         _END = _INCHI_SUBLAYER_END
 
@@ -66,7 +66,7 @@ class PARSE():
 
         _START = _escape('/')
         _LAYER = (_not_followed_by(_LOWERCASE_LETTER) +
-                  _named_capturing(_NONWHITESPACES_NONGREEDY,
+                  _named_capturing(_NONSPACES_NONGREEDY,
                                    name=CONTENT_KEY))
         _END = _INCHI_SUBLAYER_END
 

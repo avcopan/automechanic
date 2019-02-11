@@ -11,12 +11,12 @@ from pandas import read_csv as _read_csv
 from pandas import DataFrame as _DataFrame
 from pandas import Int64Index as _Int64Index
 from pandas import RangeIndex as _RangeIndex
-from .rere.find import first_capture as _first_capture
-from .rere.pattern import escape as _escape
-from .rere.pattern import capturing as _capturing
-from .rere.pattern_lib import STRING_START as _STRING_START
-from .rere.pattern_lib import STRING_END as _STRING_END
-from .rere.pattern_lib import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
+from autoparse.find import first_capture as _first_capture
+from autoparse.pattern import escape as _escape
+from autoparse.pattern import capturing as _capturing
+from autoparse.pattern import STRING_START as _STRING_START
+from autoparse.pattern import STRING_END as _STRING_END
+from autoparse.pattern import UNSIGNED_INTEGER as _UNSIGNED_INTEGER
 
 IDX_KEY = 'i_'
 IDX_TYP = numpy.dtype('int64')

@@ -57,7 +57,7 @@ def test__thermo_t_common_default():
 
 
 if __name__ == '__main__':
-    test__thermo_t_common_default()
+    # test__thermo_t_common_default()
     test__thermo_data()
-    test__reaction_unit_names()
-    test__reaction_data()
+    # test__reaction_unit_names()
+    # test__reaction_data()
